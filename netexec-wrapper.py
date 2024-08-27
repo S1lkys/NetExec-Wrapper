@@ -91,18 +91,6 @@ def enum_all_check_for_authenticated_access():
         print("Executing: netexec smb {0} -u {1} -p {2} --local-auth".format(str(target),str(username), str(password)))
         subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-p", str(password), "--local-auth"])
 
-        print("Executing: netexec ldap {0} -u {1} -p {2}".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-p", str(password)])
-        
-        print("Executing: netexec ldap {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
-        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
-
-        print("Executing: netexec winrm {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-p", str(password)])
-
-        print("Executing: netexec winrm {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
-        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
-
         print("Executing: netexec mssql  {0} -u {1} -p {2}".format(str(target),str(username), str(password)))
         subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-p", str(password)])
 
@@ -112,17 +100,23 @@ def enum_all_check_for_authenticated_access():
         print("Executing: netexec mssql  {0} -u {1} -p {2} --local-auth".format(str(target),str(username), str(password)))
         subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-p", str(password), "--local-auth"])
 
-        print("Executing: netexec ssh  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "ssh", str(target) , "-u",  str(username) ,"-p", str(password)])
+        print("Executing: netexec winrm {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
+        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-p", str(password)])
 
-        print("Executing: netexec ftp  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "ftp", str(target) , "-u",  str(username) ,"-p", str(password)])
-
+        print("Executing: netexec winrm {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
+        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
+        
         print("Executing: netexec rdp  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
         subprocess.run(["netexec", "rdp", str(target) , "-u",  str(username) ,"-p", str(password)])
 
         print("Executing: netexec rdp  {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
         subprocess.run(["netexec", "rdp", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
+
+        print("Executing: netexec ssh  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
+        subprocess.run(["netexec", "ssh", str(target) , "-u",  str(username) ,"-p", str(password)])
+
+        print("Executing: netexec ftp  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
+        subprocess.run(["netexec", "ftp", str(target) , "-u",  str(username) ,"-p", str(password)])
 
         print("Executing: netexec wmi  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
         subprocess.run(["netexec", "wmi", str(target) , "-u",  str(username) ,"-p", str(password)])
@@ -136,6 +130,13 @@ def enum_all_check_for_authenticated_access():
         print("Executing: netexec vnc  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
         subprocess.run(["netexec", "vnc", str(target) , "-u",  str(username) ,"-p", str(password)])
 
+        print("Executing: netexec ldap {0} -u {1} -p {2}".format(str(target),str(username), str(password)))
+        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-p", str(password)])
+        
+        print("Executing: netexec ldap {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
+        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
+
+
     elif nthash:
         print("Executing: netexec smb {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
         subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-H", str(nthash)])
@@ -146,18 +147,6 @@ def enum_all_check_for_authenticated_access():
         print("Executing: netexec smb {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
         subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-H", str(nthash),"-d", str(domain)])
 
-        print("Executing: netexec ldap {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-H", str(nthash)])
-        
-        print("Executing: netexec ldap {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
-        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-H", str(nthash),"-d", str(domain)])
-
-        print("Executing: netexec winrm {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-H", str(nthash)])
-
-        print("Executing: netexec winrm {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
-        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-H", str(nthash),"-d", str(domain)])
-
         print("Executing: netexec mssql  {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
         subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-H", str(nthash)])
 
@@ -166,6 +155,12 @@ def enum_all_check_for_authenticated_access():
 
         print("Executing: netexec mssql  {0} -u {1} -H {2} --local-auth".format(str(target),str(username), str(nthash)))
         subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-H", str(nthash)], "--local-auth")
+
+        print("Executing: netexec winrm {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
+        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-H", str(nthash)])
+
+        print("Executing: netexec winrm {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
+        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-H", str(nthash),"-d", str(domain)])
 
         print("Executing: netexec rdp  {0} -u {1} -H {2} ".format(str(target),str(username), str(nthash)))
         subprocess.run(["netexec", "rdp", str(target) , "-u",  str(username) ,"-H", str(nthash)])
@@ -184,6 +179,12 @@ def enum_all_check_for_authenticated_access():
 
         print("Executing: netexec vnc  {0} -u {1} -H {2} ".format(str(target),str(username), str(nthash)))
         subprocess.run(["netexec", "vnc", str(target) , "-u",  str(username) ,"-H", str(nthash)])
+
+        print("Executing: netexec ldap {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
+        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-H", str(nthash)])
+        
+        print("Executing: netexec ldap {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
+        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-H", str(nthash),"-d", str(domain)])
 
     else:
         print("No Password and no hash set")
