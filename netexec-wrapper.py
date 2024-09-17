@@ -2,17 +2,88 @@
 from consolemenu import *
 from consolemenu.items import *
 from consolemenu.format import *
+from datetime import datetime
+import asyncio
 import subprocess
 import os
 
 
-target = "" # 172.16.169.0/24
+class bcolors:
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    PURPLE = '\033[95m'
+    FAILRED = '\033[91m'
+    ENDC = '\033[0m'
+
+target = "" # 172.16.169.0/24 / hosts file
 username =""
 password =""
 domain = ""
 text = ""
 nthash = ""
 
+async def run_command(*args):
+    # Create subprocess
+
+    process = await asyncio.create_subprocess_exec(
+        *args,
+        # stdout must a pipe to be accessible as process.stdout
+        stdout=asyncio.subprocess.PIPE)
+    # Wait for the subprocess to finish
+    stdout, stderr = await process.communicate()
+    # Return stdout
+    protocols=[b'SSH',b'MSSQL',b'SMB',b'RPC',b'FTP',b'WINRM',b'WMI',b'RDP',b'VNC',b'LDAP']
+    command = ""
+    for i in args:
+        command = command+ i + " "
+    print("\n======[ "+command+" ]======")
+    for row in stdout.split(b'\n'):
+        if(b'[+]' in row or b'[-]' in row or b'[*]' in row):
+            for value in row.split():
+                if (value in protocols):
+                    newvalue = bcolors.OKBLUE + value.decode() + bcolors.ENDC
+                    row = row.replace(value,newvalue.encode(),1)
+                match value:
+                    case b'[+]':
+                        newvalue = bcolors.OKGREEN + value.decode() + bcolors.ENDC
+                        row = row.replace(value,newvalue.encode(),1)
+                    case b'[-]':
+                        newvalue = bcolors.FAILRED + value.decode() + bcolors.ENDC
+                        row = row.replace(value,newvalue.encode(),1)
+                    case b'[*]':
+                        newvalue = bcolors.PURPLE + value.decode() + bcolors.ENDC
+                        row = row.replace(value,newvalue.encode(),1)
+                    case b'(Pwn3d!)':
+                        newvalue = bcolors.YELLOW + value.decode() + bcolors.ENDC
+                        row = row.replace(value,newvalue.encode(),1)
+            print(row.decode().strip())
+    return stdout.decode().strip()
+
+async def prepare_command(protocol:str, target:str, username:str, password:str) -> None:
+    res = await run_command('netexec', protocol, target, '-u', username, '-p', password, '--continue-on-success')
+    return res
+
+async def prepare_command_domain(protocol:str, target:str, username:str, password:str, domain:str) -> None:
+    res = await run_command('netexec', protocol, target, '-u', username, '-p', password, '-d', domain, '--continue-on-success')
+    return res
+
+async def prepare_command_localauth(protocol:str, target:str, username:str, password:str) -> None:
+    res = await run_command('netexec', protocol, target, '-u', username, '-p', password, '--local-auth', '--continue-on-success')
+    return res
+
+async def prepare_command_pth(protocol:str, target:str, username:str, nthash:str) -> None:
+    res = await run_command('netexec', protocol, target, '-u', username, '-H', nthash, '--continue-on-success')
+    return res
+
+async def prepare_command_pth_domain(protocol:str, target:str, username:str, nthash:str, domain:str) -> None:
+    res = await run_command('netexec', protocol, target, '-u', username, '-H', nthash, '-d', domain, '--continue-on-success')
+    return res
+
+async def prepare_command_pth_localauth(protocol:str, target:str, username:str, nthash:str) -> None:
+    res = await run_command('netexec', protocol, target, '-u', username, '-H', nthash, '--local-auth', '--continue-on-success')
+    return res
 
 def enum_smb_enum_hosts():
     print("Executing: netexec smb {0}".format(str(target)))
@@ -81,113 +152,72 @@ def enum_smb_authenticated_user_enum_all(username, password):
     pu.enter_to_continue()
 
 def enum_all_check_for_authenticated_access():
+    startTime = datetime.now()
+    task_list = []
     if password:
-        print("Executing: netexec smb {0} -u {1} -p {2}".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-p", str(password)])
+        task_list.append(prepare_command('smb',target,username,password) )
+        task_list.append(prepare_command_localauth('smb',target,username,password))
 
-        print("Executing: netexec smb {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
-        subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-p", str(password),"-d", str(domain)])
+        task_list.append(prepare_command('mssql',target,username,password) )
+        task_list.append(prepare_command_localauth('mssql',target,username,password))
 
-        print("Executing: netexec smb {0} -u {1} -p {2} --local-auth".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-p", str(password), "--local-auth"])
+        task_list.append(prepare_command('winrm',target,username,password) )
 
-        print("Executing: netexec mssql  {0} -u {1} -p {2}".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-p", str(password)])
-
-        print("Executing: netexec mssql  {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
-        subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
-
-        print("Executing: netexec mssql  {0} -u {1} -p {2} --local-auth".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-p", str(password), "--local-auth"])
-
-        print("Executing: netexec winrm {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-p", str(password)])
-
-        print("Executing: netexec winrm {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
-        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
+        task_list.append(prepare_command('rdp',target,username,password) )
         
-        print("Executing: netexec rdp  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "rdp", str(target) , "-u",  str(username) ,"-p", str(password)])
+        task_list.append(prepare_command('ssh',target,username,password) )
 
-        print("Executing: netexec rdp  {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
-        subprocess.run(["netexec", "rdp", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
+        task_list.append(prepare_command('ftp',target,username,password) )
 
-        print("Executing: netexec ssh  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "ssh", str(target) , "-u",  str(username) ,"-p", str(password)])
-
-        print("Executing: netexec ftp  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "ftp", str(target) , "-u",  str(username) ,"-p", str(password)])
-
-        print("Executing: netexec wmi  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "wmi", str(target) , "-u",  str(username) ,"-p", str(password)])
-
-        print("Executing: netexec wmi  {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
-        subprocess.run(["netexec", "wmi", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
-
-        print("Executing: netexec wmi  {0} -u {1} -p {2} --local-auth".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "wmi", str(target) , "-u",  str(username) ,"-p", str(password), "--local-auth"])
-
-        print("Executing: netexec vnc  {0} -u {1} -p {2} ".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "vnc", str(target) , "-u",  str(username) ,"-p", str(password)])
-
-        print("Executing: netexec ldap {0} -u {1} -p {2}".format(str(target),str(username), str(password)))
-        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-p", str(password)])
+        task_list.append(prepare_command('wmi',target,username,password) )
         
-        print("Executing: netexec ldap {0} -u {1} -p {2} -d {3}".format(str(target),str(username), str(password), str(domain)))
-        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-p", str(password), "-d", str(domain)])
+        task_list.append(prepare_command_localauth('wmi',target,username,password))
 
+        task_list.append(prepare_command('vnc',target,username,password) )
 
-    elif nthash:
-        print("Executing: netexec smb {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-H", str(nthash)])
+        task_list.append(prepare_command('ldap',target,username,password) )
 
-        print("Executing: netexec smb {0} -u {1} -H {2} --local-auth".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-H", str(nthash), "--local-auth"])
+        if domain:
+            task_list.append(prepare_command_domain('smb',target,username,password,domain))
+            task_list.append(prepare_command_domain('mssql',target,username,password,domain))
+            task_list.append(prepare_command_domain('winrm',target,username,password,domain))
+            task_list.append(prepare_command_domain('rdp',target,username,password,domain))
+            task_list.append(prepare_command('ssh',target,username+'@'+domain,password) )
+            task_list.append(prepare_command_domain('wmi',target,username,password,domain))
+            task_list.append(prepare_command_domain('ldap',target,username,password,domain))
 
-        print("Executing: netexec smb {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
-        subprocess.run(["netexec", "smb", str(target) , "-u",  str(username) ,"-H", str(nthash),"-d", str(domain)])
+    if nthash:
+        task_list.append(prepare_command_pth('smb',target,username,nthash) )
+        task_list.append(prepare_command_pth_localauth('smb',target,username,nthash))
 
-        print("Executing: netexec mssql  {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-H", str(nthash)])
+        task_list.append(prepare_command_pth('mssql',target,username,nthash) )
+        task_list.append(prepare_command_pth_localauth('mssql',target,username,nthash))
 
-        print("Executing: netexec mssql  {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
-        subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-H", str(nthash), "-d", str(domain)])
+        task_list.append(prepare_command_pth('winrm',target,username,nthash) )
 
-        print("Executing: netexec mssql  {0} -u {1} -H {2} --local-auth".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "mssql", str(target) , "-u",  str(username) ,"-H", str(nthash)], "--local-auth")
+        task_list.append(prepare_command_pth('rdp',target,username,nthash) )
 
-        print("Executing: netexec winrm {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-H", str(nthash)])
+        task_list.append(prepare_command_pth('wmi',target,username,nthash) )
+        task_list.append(prepare_command_pth_localauth('wmi',target,username,nthash))
 
-        print("Executing: netexec winrm {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
-        subprocess.run(["netexec", "winrm", str(target) , "-u",  str(username) ,"-H", str(nthash),"-d", str(domain)])
-
-        print("Executing: netexec rdp  {0} -u {1} -H {2} ".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "rdp", str(target) , "-u",  str(username) ,"-H", str(nthash)])
-
-        print("Executing: netexec rdp  {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
-        subprocess.run(["netexec", "rdp", str(target) , "-u",  str(username) ,"-H", str(nthash), "-d", str(domain)])
-
-        print("Executing: netexec wmi  {0} -u {1} -H {2} ".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "wmi", str(target) , "-u",  str(username) ,"-H", str(nthash)])
-
-        print("Executing: netexec wmi  {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
-        subprocess.run(["netexec", "wmi", str(target) , "-u",  str(username) ,"-H", str(nthash), "-d", str(domain)])
-
-        print("Executing: netexec wmi  {0} -u {1} -H {2} --local-auth".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "wmi", str(target) , "-u",  str(username) ,"-H", str(nthash), "--local-auth"])
-
-        print("Executing: netexec vnc  {0} -u {1} -H {2} ".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "vnc", str(target) , "-u",  str(username) ,"-H", str(nthash)])
-
-        print("Executing: netexec ldap {0} -u {1} -H {2}".format(str(target),str(username), str(nthash)))
-        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-H", str(nthash)])
-        
-        print("Executing: netexec ldap {0} -u {1} -H {2} -d {3}".format(str(target),str(username), str(nthash), str(domain)))
-        subprocess.run(["netexec", "ldap", str(target) , "-u",  str(username) ,"-H", str(nthash),"-d", str(domain)])
+        task_list.append(prepare_command_pth('ldap',target,username,nthash) )
+       
+        if domain:
+            task_list.append(prepare_command_pth_domain('smb',target,username,nthash,domain))
+            task_list.append(prepare_command_pth_domain('mssql',target,username,nthash,domain))
+            task_list.append(prepare_command_pth_domain('winrm',target,username,nthash,domain))
+            task_list.append(prepare_command_pth_domain('rdp',target,username,nthash,domain))
+            task_list.append(prepare_command_pth_domain('wmi',target,username,nthash,domain))
+            task_list.append(prepare_command_pth_domain('ldap',target,username,nthash,domain))
 
     else:
         print("No Password and no hash set")
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    commands = asyncio.gather(*task_list)
+    reslt = loop.run_until_complete(commands)
+    loop.close()
+    print("Done! Execution duration: "+str(datetime.now() - startTime))
     pu = PromptUtils(Screen())
     pu.enter_to_continue()
 
@@ -216,7 +246,7 @@ def setValuesAndStart():
     global text
     text = selectedTarget +selectedUsername +selectedPassword+ selectedNTHash +selectedDomain
     global menu
-    menu = ConsoleMenu("NetExec Wrapper", "By S.1.l.k.y (Maximilian Barz)\nVersion 0.1",prologue_text=text, formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
+    menu = ConsoleMenu("NetExec Wrapper", "By S.1.l.k.y (Maximilian Barz)\nVersion 0.2",prologue_text=text, formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
 
     # Create Enumeration Submenu entry in Main Menu
     enumeration_submenu = SelectionMenu("","Enumeration Menu",prologue_text=text, formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
@@ -228,7 +258,7 @@ def setValuesAndStart():
 
     #SubFunction in in Main Menu
     restart_function_item = FunctionItem("Set new Target Values", restart)
-    check_for_authenticated_access = FunctionItem("Check Access for all protocols", enum_all_check_for_authenticated_access,)
+    check_for_authenticated_access = FunctionItem("Check Access for all protocols", enum_all_check_for_authenticated_access)
 
     # Create SMB Submenu entry in Sub Menu
     SMB_submenu = SelectionMenu("","SMB Enumeration",prologue_text=text, formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
@@ -349,7 +379,7 @@ def get_prologue_pretext():
 # MenuItem is the base class for all items, it doesn't do anything when selected
 menu_item = MenuItem("Menu Item")
 
-premenu = ConsoleMenu("NetExec Wrapper", "By S.1.l.k.y (Maximilian Barz)\nVersion 0.1",prologue_text=get_prologue_pretext(), formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
+premenu = ConsoleMenu("NetExec Wrapper", "By S.1.l.k.y (Maximilian Barz)\nVersion 0.2",prologue_text=get_prologue_pretext(), formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
 
 # Create some items
 setValuesfunction_item = FunctionItem("Set Target Values", setValuesAndStart)
