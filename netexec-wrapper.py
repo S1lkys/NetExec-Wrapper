@@ -382,7 +382,7 @@ def get_prologue_pretext():
 # MenuItem is the base class for all items, it doesn't do anything when selected
 menu_item = MenuItem("Menu Item")
 
-premenu = ConsoleMenu("NetExec Wrapper", "By S.1.l.k.y (Maximilian Barz)\nVersion 0.2",prologue_text=get_prologue_pretext(), formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
+premenu = ConsoleMenu("NetExec Wrapper", "By S.1.l.k.y (Maximilian Barz)\nVersion 0.3",prologue_text=get_prologue_pretext(), formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
 
 # Create some items
 setValuesfunction_item = FunctionItem("Set Target Values", setValuesAndStart)
