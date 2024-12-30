@@ -249,7 +249,7 @@ def setValuesAndStart():
     global text
     text = selectedTarget +selectedUsername +selectedPassword+ selectedNTHash +selectedDomain
     global menu
-    menu = ConsoleMenu("NetExec Wrapper", "By S.1.l.k.y (Maximilian Barz)\nVersion 0.2",prologue_text=text, formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
+    menu = ConsoleMenu("NetExec Wrapper", "By S.1.l.k.y (Maximilian Barz)\nVersion 0.3",prologue_text=text, formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
 
     # Create Enumeration Submenu entry in Main Menu
     enumeration_submenu = SelectionMenu("","Enumeration Menu",prologue_text=text, formatter=MenuFormatBuilder().set_title_align('center').set_subtitle_align('center').show_prologue_top_border(True).show_prologue_bottom_border(True))
