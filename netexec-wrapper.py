@@ -6,6 +6,7 @@ from datetime import datetime
 import asyncio
 import subprocess
 import os
+import warnings
 
 
 class bcolors:
@@ -23,6 +24,8 @@ password =""
 domain = ""
 text = ""
 nthash = ""
+
+warnings.filterwarnings("ignore")
 
 async def run_command(*args):
     # Create subprocess
@@ -154,7 +157,12 @@ def enum_smb_authenticated_user_enum_all(username, password):
 def enum_all_check_for_authenticated_access():
     startTime = datetime.now()
     task_list = []
-    if password:
+    if not password and not nthash: 
+        print("No Password and no hash set")
+        pu = PromptUtils(Screen())
+        pu.enter_to_continue()
+        return
+    if password == "test":
         task_list.append(prepare_command('smb',target,username,password) )
         task_list.append(prepare_command_localauth('smb',target,username,password))
 
@@ -164,6 +172,7 @@ def enum_all_check_for_authenticated_access():
         task_list.append(prepare_command('winrm',target,username,password) )
 
         task_list.append(prepare_command('rdp',target,username,password) )
+        task_list.append(prepare_command_domain('rdp',target,username,password,target))
         
         task_list.append(prepare_command('ssh',target,username,password) )
 
@@ -185,7 +194,6 @@ def enum_all_check_for_authenticated_access():
             task_list.append(prepare_command('ssh',target,username+'@'+domain,password) )
             task_list.append(prepare_command_domain('wmi',target,username,password,domain))
             task_list.append(prepare_command_domain('ldap',target,username,password,domain))
-
     if nthash:
         task_list.append(prepare_command_pth('smb',target,username,nthash) )
         task_list.append(prepare_command_pth_localauth('smb',target,username,nthash))
@@ -209,19 +217,14 @@ def enum_all_check_for_authenticated_access():
             task_list.append(prepare_command_pth_domain('rdp',target,username,nthash,domain))
             task_list.append(prepare_command_pth_domain('wmi',target,username,nthash,domain))
             task_list.append(prepare_command_pth_domain('ldap',target,username,nthash,domain))
-
-    else:
-        print("No Password and no hash set")
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     commands = asyncio.gather(*task_list)
-    reslt = loop.run_until_complete(commands)
+    loop.run_until_complete(commands)
     loop.close()
     print("Done! Execution duration: "+str(datetime.now() - startTime))
     pu = PromptUtils(Screen())
     pu.enter_to_continue()
-
-
 
 def restart():
     os.execl(sys.executable, sys.executable, *sys.argv)
